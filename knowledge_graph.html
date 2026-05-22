@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>知识图谱</title><link rel="stylesheet" href="style.css">
+<style>.graph-controls { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 10; }
+.graph-controls button { width: 36px; height: 36px; border: 1px solid #ccc; border-radius: 4px; background: #fff; font-size: 18px; cursor: pointer; font-weight: bold; color: #555; }
+.graph-controls button:hover { background: #f0f0f0; }
+#graph-wrapper { position: relative; width: 100%; }
+</style></head><body>
+<header><h1>概念 ↔ 洞见 知识图谱</h1><nav><a href="index.html">← 首页</a></nav></header>
+
+<div id="graph-wrapper">
+<div id="graph-container"></div>
+<div class="graph-controls">
+<button onclick="zoomIn()" title="放大">+</button>
+<button onclick="zoomOut()" title="缩小">−</button>
+<button onclick="zoomReset()" title="全览">⌂</button>
+</div>
+</div>
+<p style="color:#888;font-size:0.85em;margin-top:10px">🔵 概念节点 · 🟠 原创洞见 · 🔵 深化洞见 · 滚轮缩放 · 拖拽移动 · 右侧按钮控制</p>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+var nodes = [{id:"c_风险_Risk",name:"风险",group:"concept",count:96},{id:"c_价值与价格_Value_and_Price",name:"价值与价格",group:"concept",count:84},{id:"c_市场周期_Market_Cycles",name:"市场周期",group:"concept",count:68},{id:"c_投资者心理_Investor_Psychology",name:"投资者心理",group:"concept",count:88},{id:"c_宏观预测_Macro_Forecasting",name:"宏观预测",group:"concept",count:79},{id:"c_信用_Credit",name:"信用",group:"concept",count:33},{id:"c_流动性_Liquidity",name:"流动性",group:"concept",count:11},{id:"c_逆向思维_Contrarian_Thinking",name:"逆向思维",group:"concept",count:26},{id:"c_杠杆_Leverage",name:"杠杆",group:"concept",count:26},{id:"c_市场效率_Market_Efficiency",name:"市场效率",group:"concept",count:7},{id:"c_防御性投资_Defensive_Investing",name:"防御性投资",group:"concept",count:17},{id:"c_经济政策_Economic_Policy",name:"经济政策",group:"concept",count:18},{id:"i_价格与价值的关系是投资中唯一最重要的事",name:"价格与价值的关系是投资中唯一最重要的事...",group:"insight",level:"深化",count:5},{id:"i_永远不要把牛市和你的智商混为一谈",name:"永远不要把牛市和你的智商混为一谈...",group:"insight",level:"原创",count:5},{id:"i_领先于时代太多与错误无法区分",name:"领先于时代太多与错误无法区分...",group:"insight",level:"原创",count:4},{id:"i_聪明人在开始时做的事，傻瓜在最后才会做",name:"聪明人在开始时做的事，傻瓜在最后才会做...",group:"insight",level:"深化",count:5},{id:"i_风险最大的事是相信没有风险",name:"风险最大的事是相信没有风险...",group:"insight",level:"原创",count:5},{id:"i_无法预测，但可以准备",name:"无法预测，但可以准备...",group:"insight",level:"原创",count:5},{id:"i_在坏年景中存活比在好年景中闪耀更重要",name:"在坏年景中存活比在好年景中闪耀更重要...",group:"insight",level:"原创",count:5},{id:"i_没有任何投资工具应该承诺比其底层资产更高的流动性",name:"没有任何投资工具应该承诺比其底层资产更高的流动性...",group:"insight",level:"原创",count:5},{id:"i_信用回报来自合同，股票回报来自市场情绪",name:"信用回报来自合同，股票回报来自市场情绪...",group:"insight",level:"原创",count:5},{id:"i_你不能吃利差，你只能花回报",name:"你不能吃利差，你只能花回报...",group:"insight",level:"原创",count:5},{id:"i_市场是一个投票机，不是一台称重机——至少在短期",name:"市场是一个投票机，不是一台称重机——至少在短期...",group:"insight",level:"深化",count:4},{id:"i_大多数伟大的投资始于不适感",name:"大多数伟大的投资始于不适感...",group:"insight",level:"深化",count:4},{id:"i_这次不一样是投资中最危险的四个字",name:"'这次不一样'是投资中最危险的四个字...",group:"insight",level:"深化",count:5},{id:"i_对于任何无法知晓的事，确定性没有立足之地",name:"对于任何无法知晓的事，确定性没有立足之地...",group:"insight",level:"深化",count:5},{id:"i_波动性+杠杆=火药桶",name:"波动性+杠杆=火药桶...",group:"insight",level:"原创",count:5},{id:"i_经济规律不可废除——政府干预必然产生意外后果",name:"经济规律不可废除——政府干预必然产生意外后果...",group:"insight",level:"原创",count:5}];
+var links = [{source:"c_风险_Risk",target:"i_风险最大的事是相信没有风险"},{source:"c_风险_Risk",target:"i_在坏年景中存活比在好年景中闪耀更重要"},{source:"c_风险_Risk",target:"i_波动性+杠杆=火药桶"},{source:"c_价值与价格_Value_and_Price",target:"i_价格与价值的关系是投资中唯一最重要的事"},{source:"c_价值与价格_Value_and_Price",target:"i_市场是一个投票机，不是一台称重机——至少在短期"},{source:"c_市场周期_Market_Cycles",target:"i_聪明人在开始时做的事，傻瓜在最后才会做"},{source:"c_市场周期_Market_Cycles",target:"i_永远不要把牛市和你的智商混为一谈"},{source:"c_投资者心理_Investor_Psychology",target:"i_永远不要把牛市和你的智商混为一谈"},{source:"c_投资者心理_Investor_Psychology",target:"i_大多数伟大的投资始于不适感"},{source:"c_投资者心理_Investor_Psychology",target:"i_市场是一个投票机，不是一台称重机——至少在短期"},{source:"c_宏观预测_Macro_Forecasting",target:"i_无法预测，但可以准备"},{source:"c_宏观预测_Macro_Forecasting",target:"i_对于任何无法知晓的事，确定性没有立足之地"},{source:"c_信用_Credit",target:"i_信用回报来自合同，股票回报来自市场情绪"},{source:"c_信用_Credit",target:"i_你不能吃利差，你只能花回报"},{source:"c_流动性_Liquidity",target:"i_没有任何投资工具应该承诺比其底层资产更高的流动性"},{source:"c_逆向思维_Contrarian_Thinking",target:"i_领先于时代太多与错误无法区分"},{source:"c_逆向思维_Contrarian_Thinking",target:"i_大多数伟大的投资始于不适感"},{source:"c_杠杆_Leverage",target:"i_波动性+杠杆=火药桶"},{source:"c_市场效率_Market_Efficiency",target:"i_市场是一个投票机，不是一台称重机——至少在短期"},{source:"c_防御性投资_Defensive_Investing",target:"i_在坏年景中存活比在好年景中闪耀更重要"},{source:"c_经济政策_Economic_Policy",target:"i_经济规律不可废除——政府干预必然产生意外后果"}];
+
+var width = document.getElementById('graph-container').clientWidth;
+var height = 600;
+
+var svg = d3.select('#graph-container').append('svg').attr('width',width).attr('height',height);
+
+// Zoom behavior
+var g = svg.append('g');
+var zoom = d3.zoom().scaleExtent([0.2, 5]).on('zoom', (e) => { g.attr('transform', e.transform); });
+svg.call(zoom);
+// Disable double-click zoom (interferes with drag)
+svg.on('dblclick.zoom', null);
+
+var simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(120))
+    .force('charge', d3.forceManyBody().strength(-300))
+    .force('center', d3.forceCenter(width/2, height/2))
+    .force('collision', d3.forceCollide().radius(30));
+
+var link = g.append('g').selectAll('line').data(links).join('line')
+    .attr('stroke','#ddd').attr('stroke-width',1.5);
+
+var node = g.append('g').selectAll('circle').data(nodes).join('circle')
+    .attr('r', d => d.group==='concept' ? 8 + d.count/12 : 6 + d.count/4)
+    .attr('fill', d => d.group==='concept' ? '#007bff' : (d.level==='原创' ? '#fd7e14' : '#0056b3'))
+    .attr('stroke','#fff').attr('stroke-width',2)
+    .call(d3.drag().on('start',(e,d) => { if(!e.active) simulation.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+        .on('drag',(e,d) => { d.fx=e.x; d.fy=e.y; })
+        .on('end',(e,d) => { if(!e.active) simulation.alphaTarget(0); d.fx=null; d.fy=null; }));
+
+var label = g.append('g').selectAll('text').data(nodes).join('text')
+    .text(d => d.name).attr('font-size',10).attr('dx',12).attr('dy',4)
+    .attr('fill','#555');
+
+node.append('title').text(d => d.name);
+
+simulation.on('tick', () => {
+    link.attr('x1',d => d.source.x).attr('y1',d => d.source.y).attr('x2',d => d.target.x).attr('y2',d => d.target.y);
+    node.attr('cx',d => d.x).attr('cy',d => d.y);
+    label.attr('x',d => d.x).attr('y',d => d.y);
+});
+
+// Zoom control functions
+function zoomIn() { svg.transition().call(zoom.scaleBy, 1.3); }
+function zoomOut() { svg.transition().call(zoom.scaleBy, 0.7); }
+function zoomReset() { svg.transition().call(zoom.transform, d3.zoomIdentity); }
+</script>
+<footer><p><a href="index.html">← 返回首页</a></p></footer></body></html>
